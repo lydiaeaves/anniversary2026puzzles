@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Crossword – Anniversary Puzzle</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fafafa;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .game { width: 420px; }
+    h1 { text-align: center; margin-bottom: 10px; }
+
+    #timer {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 50px);
+      grid-template-rows: repeat(5, 50px);
+      gap: 2px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .cell {
+      position: relative;
+      background: white;
+      border: 1px solid #111;
+    }
+
+    .cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      font-size: 1.4rem;
+      border: none;
+      outline: none;
+      text-transform: uppercase;
+    }
+
+    .cell.block {
+      background: #111;
+    }
+
+    .number {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 0.6rem;
+    }
+
+    .clues {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      font-size: 0.9rem;
+    }
+
+    .clues h3 { margin-bottom: 6px; }
+    .clues ol { padding-left: 18px; margin: 0; }
+
+    .message {
+      text-align: center;
+      font-weight: 600;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+<div class="game">
+  <h1>Mini Crossword</h1>
+  <div id="timer">00:00</div>
+  <div class="grid" id="grid"></div>
+
+  <div class="clues">
+    <div>
+      <h3>Across</h3>
+      <ol>
+        1. Where spanking happens<br>
+        2. Like certain calendars or women's group rituals<br>
+        3. Home of T-23<br>
+        4. Vanilla is better than floral<br>
+        5. The number of years we've been together<br>
+      </ol>
+    </div>
+    <div>
+      <h3>Down</h3>
+      <ol>
+        1. How many times you've gotten Queen Bee this year. A _____!<br>
+        2. I have one with all the states I've visited<br>
+        6. Haha, you said _____wear!<br>
+        7. Location of Foster Island<br>
+        8. We would do this highly for Wicked and lowly for Under the Christmas Tree<br>
+      </ol>
+    </div>
+  </div>
+
+  <div class="message" id="message"></div>
+</div>
+
+<script>
+const solution = [
+  [null,'B','U','M',null],
+  ['L','U','N','A','R'],
+  ['I','N','D','I','A'],
+  ['S','C','E','N','T'],
+  ['T','H','R','E','E']
+];
+
+const numbers = {
+  '0-1':1, '0-2':2, '0-3':3,
+  '1-0':4,
+  '2-0':5,
+  '3-0':6,
+  '4-0':7
+};
+
+const gridEl = document.getElementById('grid');
+const messageEl = document.getElementById('message');
+const timerEl = document.getElementById('timer');
+
+const inputs = [];
+let timerStarted = false;
+let timerInterval = null;
+let secondsElapsed = 0;
+
+// Build grid
+solution.forEach((row, r) => {
+  row.forEach((cell, c) => {
+    const div = document.createElement('div');
+    div.className = 'cell';
+
+    if (cell === null) {
+      div.classList.add('block');
+    } else {
+      const input = document.createElement('input');
+      input.maxLength = 1;
+      input.dataset.row = r;
+      input.dataset.col = c;
+      input.dataset.solution = cell;
+
+      input.addEventListener('input', e => {
+        e.target.value = e.target.value.toUpperCase();
+        if (!timerStarted) startTimer();
+        moveNext(r,c);
+        checkSolved();
+      });
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !e.target.value) movePrev(r,c);
+        handleArrows(e,r,c);
+      });
+
+      inputs.push(input);
+      div.appendChild(input);
+
+      const key = `${r}-${c}`;
+      if (numbers[key]) {
+        const num = document.createElement('div');
+        num.className = 'number';
+        num.textContent = numbers[key];
+        div.appendChild(num);
+      }
+    }
+
+    gridEl.appendChild(div);
+  });
+});
+
+function moveNext(r,c){
+  for(let i=0;i<inputs.length;i++){
+    if(+inputs[i].dataset.row===r && +inputs[i].dataset.col===c){
+      if(inputs[i+1]) inputs[i+1].focus();
+      break;
+    }
+  }
+}
+function movePrev(r,c){
+  for(let i=0;i<inputs.length;i++){
+    if(+inputs[i].dataset.row===r && +inputs[i].dataset.col===c){
+      if(inputs[i-1]) inputs[i-1].focus();
+      break;
+    }
+  }
+}
+function handleArrows(e,r,c){
+  const keyMap={ArrowRight:[0,1],ArrowLeft:[0,-1],ArrowDown:[1,0],ArrowUp:[-1,0]};
+  if(!keyMap[e.key]) return;
+  e.preventDefault();
+  const [dr,dc]=keyMap[e.key];
+  const nr=r+dr,nc=c+dc;
+  const next=inputs.find(i=>+i.dataset.row===nr && +i.dataset.col===nc);
+  if(next) next.focus();
+}
+
+function startTimer(){
+  timerStarted=true;
+  timerInterval=setInterval(()=>{
+    secondsElapsed++;
+    const mins=Math.floor(secondsElapsed/60).toString().padStart(2,'0');
+    const secs=(secondsElapsed%60).toString().padStart(2,'0');
+    timerEl.textContent=`${mins}:${secs}`;
+  },500);
+}
+function stopTimer(){
+  clearInterval(timerInterval);
+}
+
+function checkSolved(){
+  const complete=inputs.every(i=>i.value===i.dataset.solution);
+  if(complete){
+    stopTimer();
+    messageEl.textContent=`✨ You solved the Mini! ✨ (${timerEl.textContent})`;
+  }
+}
+</script>
+</body>
+</html>
