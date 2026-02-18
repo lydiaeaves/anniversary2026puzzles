@@ -2,430 +2,155 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Spelling Bee – Anniversary Puzzle</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Happy Anniversary! NYT Edition!</title>
 
 <style>
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e0e0e0;
+    --text: #111111;
+    --muted: #666666;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
   body {
+    margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #fafafa;
+    background: var(--bg);
+    color: var(--text);
     display: flex;
     justify-content: center;
-    padding: 40px;
   }
 
-  .game {
-    position: relative;
-    width: 360px;
+  .page {
+    width: min(900px, 100%);
+    padding: 40px 24px 60px;
+  }
+
+  header {
     text-align: center;
-    padding-top: 24px;
+    margin-bottom: 40px;
   }
 
-  h1 { margin-bottom: 8px; }
-
-  .current {
-    font-size: 1.6rem;
-    min-height: 36px;
-    letter-spacing: 0.25em;
-    margin-bottom: 10px;
+  header h1 {
+    font-size: 2.2rem;
+    margin: 0 0 10px;
   }
 
-  .hive {
-    position: relative;
-    width: 240px;
-    height: 220px;
-    margin: 0 auto 16px;
+  header p {
+    font-size: 1rem;
+    color: var(--muted);
+    margin: 0;
   }
 
-  .hex {
-    position: absolute;
-    width: 70px;
-    height: 70px;
-    cursor: pointer;
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
   }
 
-  .hex svg {
-    width: 100%;
-    height: 100%;
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .hex polygon {
-    fill: #e6e6e6;
-    stroke: #111;
-    stroke-width: 2;
-    shape-rendering: geometricPrecision;
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
   }
 
-  .hex.center polygon {
-    fill: #f7da21;
+  .card h2 {
+    font-size: 1.3rem;
+    margin: 0 0 6px;
   }
 
-  .hex text {
-    font-size: 26px;
-    font-weight: 700;
-    text-anchor: middle;
-    dominant-baseline: middle;
-    pointer-events: none;
-  }
-
-  .controls button {
-    margin: 4px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    border: 1px solid #ccc;
-    background: white;
-    cursor: pointer;
-  }
-
-  .new-game {
-    position: absolute;
-    top: 0;
-    right: 16px;
-    font-size: 0.8rem;
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid #ccc;
-    background: #f4f4f4;
-    cursor: pointer;
-    opacity: 0.85;
-  }
-
-  .new-game:hover {
-    opacity: 1;
-  }
-
-  .score {
-    font-weight: 600;
-    margin-top: 10px;
-  }
-
-  .rank {
-    margin-top: 4px;
-    font-size: 0.95rem;
-  }
-
-  .found {
-    margin-top: 12px;
+  .card p {
     font-size: 0.9rem;
-    text-align: left;
+    color: var(--muted);
+    margin: 0 0 18px;
+    line-height: 1.4;
   }
 
-  .message {
-    margin-top: 8px;
+  .play {
+    margin-top: auto;
+    align-self: flex-start;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
     font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
   }
 
-  #hintsGrid {
-    display: none;
-    background: #f0f0f0;
-    padding: 10px;
-    border-radius: 8px;
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    font-size: 0.9rem;
-    margin-top: 16px;
+  .play:hover {
+    background: #f2f2f2;
+  }
+
+  footer {
+    margin-top: 50px;
     text-align: center;
-  }
-
-  #hintsGrid table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  #hintsGrid th, #hintsGrid td {
-    border: 1px solid #999;
-    padding: 4px 6px;
-  }
-
-  #hintsGrid th {
-    background: #ddd;
+    font-size: 0.85rem;
+    color: var(--muted);
   }
 </style>
 </head>
 
 <body>
-<div class="game">
-  <button id="newGame" class="new-game">New Game</button>
-  <button id="hints" class="new-game" style="right: 100px;">Hints</button>
+  <div class="page">
+    <header>
+      <h1>Happy 3rd Anniversary!</h1>
+      <p>A collection of custom puzzles made for my favorite word nerd ❤️</p>
+    </header>
 
-  <h1>Spelling Bee</h1>
+    <section class="grid">
+      <div class="card">
+        <h2>Letter Boxed</h2>
+        <p>Connect letters around the square to form words using every letter at least once.</p>
+        <a class="play" href="letterboxed.html">Play</a>
+      </div>
 
-  <div class="current" id="current"></div>
-  <div class="hive" id="hive"></div>
+      <div class="card">
+        <h2>Spelling Bee</h2>
+        <p>Find as many words as you can using the center letter in every word.</p>
+        <a class="play" href="spellingbee.html">Play</a>
+      </div>
 
-  <div class="controls">
-    <button id="submit">Enter</button>
-    <button id="shuffle" aria-label="Shuffle">🔀</button>
-    <button id="delete">Delete</button>
+      <div class="card">
+        <h2>The Mini</h2>
+        <p>A bite-sized crossword puzzle you can finish in just a few minutes.</p>
+        <a class="play" href="mini.html">Play</a>
+      </div>
+
+      <div class="card">
+        <h2>Connections</h2>
+        <p>Group words into four sets of four based on their hidden relationships.</p>
+        <a class="play" href="connections.html">Play</a>
+      </div>
+
+      <div class="card">
+        <h2>Wordle</h2>
+        <p>Guess the five-letter word in six tries using color-coded clues.</p>
+        <a class="play" href="https://www.nytimes.com/games/create/wordle/xWqK-oZVPtb7d0HGjjN2UuOVxOR5JT_dMcxx9ytDq6t_iPA5smx9Kk5Lmp0JqfJ12G2F72Q=">Play</a>
+      </div>
+    </section>
+
+    <footer>
+      Made with love for love - NYT please don't sue me :)
+    </footer>
   </div>
-
-  <div class="score">
-    Score: <span id="score">0</span>
-  </div>
-  <div class="rank" id="rank">Beginner</div>
-
-  <div class="found" id="words"></div>
-  <div class="message" id="message"></div>
-
-  <div id="hintsGrid">
-    <h3>Hint Grid</h3>
-    <div id="hintsContent"></div>
-  </div>
-</div>
-
-<script>
-/* ======================
-   CONFIG
-====================== */
-const REQUIRED = 'E';
-let outerLetters = ['O','V','R','C','K','D'];
-
-const VALID_WORDS = new Set([
-  'CEDE','CERE','CERO','CODE','COED','COKE','CORD','CORE','CORK','COVE',
-  'CRED','DECK','DECO','DEED','DEER','DEKE','DERE','DOCK','DOER','DORE',
-  'DORK','DOVE','DREE','DREK','EDDO','EKED','EVER','KORE','OVER','RECK',
-  'REDD','REDE','REDO','REED','REEK','ROCK','RODE','ROVE','VEER',
-  'CEDED','CEDER','CERED','CODED','CODER','COKED','CORED','COVED','COVER',
-  'CREDO','CREED','CREEK','DECOR','DEKED','DRECK','DREED','DROKE','DROVE',
-  'ERODE','EVOKE','KEEVE','OCKER','ODDER','REDED','REEVE','ROVED',
-  'CODDER','CORDED','CORKED','CORVEE','DECKED','DECKER','DECODE','DECREE',
-  'DOCKED','DOCKER','DROVED','ERODED','EVOKED','EVOKER','OVERED','RECEDE',
-  'RECKED','RECODE','REEDED','REEKED','REEVED','REVOKE','ROCKED','VEERED',
-  'COOKED','COOKER','RECOOK','COCKED','RECOCK',
-  'COVERED','DECODER','DECREED','RECEDED','RECODED','REEVOKE','REVOKED',
-  'RECOCKED','OVERDECK','REEVOKED',
-  'OVERDECKED','OVERCOOKED','RECOOKED'
-]);
-
-/* ======================
-   STATE
-====================== */
-let current = '';
-let found = new Set();
-let score = 0;
-
-/* ======================
-   ELEMENTS
-====================== */
-const hiveEl = document.getElementById('hive');
-const currentEl = document.getElementById('current');
-const scoreEl = document.getElementById('score');
-const rankEl = document.getElementById('rank');
-const wordsEl = document.getElementById('words');
-const messageEl = document.getElementById('message');
-const hintsGridEl = document.getElementById('hintsGrid');
-const hintsContentEl = document.getElementById('hintsContent');
-
-/* ======================
-   STORAGE
-====================== */
-const STORAGE_KEY = 'spellingBeeState';
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    found: [...found],
-    score
-  }));
-}
-
-function loadState() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) return;
-
-  try {
-    const parsed = JSON.parse(data);
-    found = new Set(parsed.found || []);
-    score = parsed.score || 0;
-    scoreEl.textContent = score;
-    renderWords();
-    updateRank();
-  } catch {}
-}
-
-function resetGame() {
-  if (!confirm('Start a new game? This will erase progress.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  found.clear();
-  score = 0;
-  current = '';
-  scoreEl.textContent = 0;
-  rankEl.textContent = 'Beginner';
-  wordsEl.innerHTML = '';
-  messageEl.textContent = '';
-  hintsGridEl.style.display = 'none';
-  update();
-}
-
-/* ======================
-   HINT GRID
-====================== */
-function generateHintGrid(words) {
-  const grid = {};
-  const letters = [...new Set([...words].map(w => w[0]))].sort();
-  const lengths = [...new Set([...words].map(w => w.length))].sort((a,b)=>a-b);
-
-  letters.forEach(l => grid[l] = {});
-  lengths.forEach(len => letters.forEach(l => grid[l][len] = 0));
-
-  [...words].forEach(w => {
-    const first = w[0];
-    const len = w.length;
-    grid[first][len] += 1;
-  });
-
-  return {grid, letters, lengths};
-}
-
-function renderHintTable() {
-  const {grid, letters, lengths} = generateHintGrid(VALID_WORDS);
-
-  let html = '<table>';
-  // header
-  html += '<tr><th></th>';
-  lengths.forEach(len => html += `<th>${len}</th>`);
-  html += '<th>Σ</th></tr>';
-
-  // rows
-  letters.forEach(l => {
-    let rowSum = 0;
-    html += `<tr><th>${l}</th>`;
-    lengths.forEach(len => {
-      const val = grid[l][len] || 0;
-      html += `<td>${val ? val : "-"}</td>`;
-      rowSum += val;
-    });
-    html += `<td>${rowSum}</td></tr>`;
-  });
-
-  // column totals
-  html += '<tr><th>Σ</th>';
-  lengths.forEach(len => {
-    let colSum = letters.reduce((s,l) => s + (grid[l][len] || 0),0);
-    html += `<td>${colSum ? colSum : "-"}</td>`;
-  });
-  const total = letters.reduce((s,l) => s + Object.values(grid[l]).reduce((a,b)=>a+b,0),0);
-  html += `<td>${total}</td></tr>`;
-
-  html += '</table>';
-
-  hintsContentEl.innerHTML = html;
-}
-
-document.getElementById('hints').onclick = () => {
-  if (hintsGridEl.style.display === 'none') {
-    renderHintTable();
-    hintsGridEl.style.display = 'block';
-  } else {
-    hintsGridEl.style.display = 'none';
-  }
-};
-
-/* ======================
-   SCORE CALCS
-====================== */
-const maxScore = [...VALID_WORDS].reduce((sum, w) => {
-  let pts = w.length;
-  if (new Set(w).size === 7) pts += 7;
-  return sum + pts;
-}, 0);
-
-/* ======================
-   GAME LOGIC
-====================== */
-function submitWord() {
-  const word = current;
-  if (word.length < 4) return reject('Too short');
-  if (!word.includes(REQUIRED)) return reject('Must include E');
-  if (!VALID_WORDS.has(word)) return reject('Not in list');
-  if (found.has(word)) return reject('Already found');
-
-  found.add(word);
-  let pts = word.length;
-  if (new Set(word).size === 7) show('✨ Pangram! ✨'); else show('');
-  score += pts;
-
-  scoreEl.textContent = score;
-  updateRank();
-  renderWords();
-  saveState();
-
-  current = '';
-  update();
-}
-
-function reject(msg) {
-  show(msg);
-  current = '';
-  update();
-}
-
-function updateRank() {
-  if (found.size === VALID_WORDS.size) {
-    rankEl.textContent = '👑 Queen Bee!';
-    return;
-  }
-  const pct = score / maxScore;
-  const ranks = ['Beginner','Good Start','Moving Up','Good','Solid','Nice','Great','Amazing','Genius'];
-  rankEl.textContent = ranks[Math.min(ranks.length-1, Math.floor(pct*10))];
-}
-
-function renderWords() {
-  wordsEl.innerHTML = [...found].sort().map(w => `<div>${w}</div>`).join('');
-}
-
-function update() {
-  currentEl.textContent = current;
-}
-
-function show(msg) {
-  messageEl.textContent = msg;
-}
-
-/* ======================
-   CONTROLS
-====================== */
-document.getElementById('submit').onclick = submitWord;
-document.getElementById('delete').onclick = () => {
-  current = current.slice(0, -1);
-  update();
-};
-document.getElementById('shuffle').onclick = () => {
-  outerLetters.sort(() => Math.random() - 0.5);
-  renderHive();
-};
-document.getElementById('newGame').onclick = resetGame;
-
-/* ======================
-   HEX DRAWING
-====================== */
-function addHex(letter, x, y, center = false) {
-  const div = document.createElement('div');
-  div.className = 'hex' + (center ? ' center' : '');
-  div.style.left = x + 'px';
-  div.style.top = y + 'px';
-  div.innerHTML = `
-    <svg viewBox="0 0 100 100">
-      <polygon points="0,50 25,0 75,0 100,50 75,100 25,100"></polygon>
-      <text x="50" y="58">${letter}</text>
-    </svg>`;
-  div.onclick = () => { current += letter; update(); };
-  hiveEl.appendChild(div);
-}
-
-function renderHive() {
-  hiveEl.innerHTML = '';
-  const size = 70, h = size * 0.75, v = size * 0.5, cx = 85, cy = 70;
-  addHex(REQUIRED, cx, cy, true);
-  [[cx,cy-size],[cx+h,cy-v],[cx+h,cy+v],[cx,cy+size],[cx-h,cy+v],[cx-h,cy-v]]
-    .forEach((p,i)=>addHex(outerLetters[i],p[0],p[1]));
-}
-
-/* ======================
-   INIT
-====================== */
-renderHive();
-loadState();
-</script>
 </body>
 </html>
-
