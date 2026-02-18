@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Letter Boxed – Anniversary Puzzle!</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fafafa;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .game { width: 360px; text-align: center; }
+    h1 { font-size: 1.4rem; margin-bottom: 12px; }
+
+    .current {
+      font-size: 1.2rem;
+      min-height: 32px;
+      margin-bottom: 8px;
+      letter-spacing: 0.15em;
+    }
+
+    .words {
+      min-height: 24px;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    .board {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 10px;
+      width: 260px;
+      height: 260px;
+      margin: 0 auto 20px;
+    }
+
+    .letter {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      background: white;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      z-index: 1;
+    }
+
+    .letter.used {
+      background: #e5e5e5;
+      color: #555;
+    }
+
+    .letter.invalid { background: #ffe6e6; }
+
+    .empty {
+      pointer-events: none;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .controls button {
+      margin: 4px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #111;
+      color: white;
+      cursor: pointer;
+    }
+
+    .message { margin-top: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="game">
+  <h1>Try to solve in 2 words</h1>
+  <div class="current" id="current"></div>
+  <div class="words" id="words"></div>
+
+  <div class="board">
+    <svg id="lines" width="260" height="260"></svg>
+
+    <!-- Top -->
+    <div class="empty"></div>
+    <div class="letter" data-side="top">B</div>
+    <div class="letter" data-side="top">O</div>
+    <div class="letter" data-side="top">N</div>
+    <div class="empty"></div>
+
+    <!-- Left / Right -->
+    <div class="letter" data-side="left">E</div>
+    <div class="empty"></div><div class="empty"></div><div class="empty"></div>
+    <div class="letter" data-side="right">H</div>
+
+    <div class="letter" data-side="left">R</div>
+    <div class="empty"></div><div class="empty"></div><div class="empty"></div>
+    <div class="letter" data-side="right">W</div>
+
+    <div class="letter" data-side="left">S</div>
+    <div class="empty"></div><div class="empty"></div><div class="empty"></div>
+    <div class="letter" data-side="right">L</div>
+
+    <!-- Bottom -->
+    <div class="empty"></div>
+    <div class="letter" data-side="bottom">T</div>
+    <div class="letter" data-side="bottom">D</div>
+    <div class="letter" data-side="bottom">P</div>
+    <div class="empty"></div>
+  </div>
+
+  <div class="controls">
+    <button id="submit">Submit word</button>
+    <button id="backspace">Backspace</button>
+    <button id="reset">Reset</button>
+  </div>
+
+  <div class="message" id="message"></div>
+</div>
+
+<script>
+  let current = "";
+  let lastSide = null;
+  let usedWords = [];
+  let solved = false;
+  let lastPoint = null;
+  let lines = [];
+  let selectedLetters = [];
+
+  const TARGET = ["BETROTHED", "DOWNSLOPE"];
+  const ALTERNATE = ["BETHORNED", "DOWNSLOPE"];
+
+  const currentEl = document.getElementById("current");
+  const wordsEl = document.getElementById("words");
+  const messageEl = document.getElementById("message");
+  const svg = document.getElementById("lines");
+
+  document.querySelectorAll('.letter').forEach(letter => {
+    letter.addEventListener('click', () => {
+      if (solved) return;
+
+      const side = letter.dataset.side;
+      const char = letter.textContent;
+
+      if (side === lastSide) {
+        letter.classList.add('invalid');
+        setTimeout(() => letter.classList.remove('invalid'), 300);
+        return;
+      }
+
+      const rect = letter.getBoundingClientRect();
+      const boardRect = document.querySelector('.board').getBoundingClientRect();
+
+      const point = {
+        x: rect.left + rect.width / 2 - boardRect.left,
+        y: rect.top + rect.height / 2 - boardRect.top
+      };
+
+      if (lastPoint) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", lastPoint.x);
+        line.setAttribute("y1", lastPoint.y);
+        line.setAttribute("x2", point.x);
+        line.setAttribute("y2", point.y);
+        line.setAttribute("stroke", "#111");
+        line.setAttribute("stroke-width", "3");
+        line.setAttribute("stroke-linecap", "round");
+        svg.appendChild(line);
+
+        lines.push(line);
+      }
+
+      lastPoint = point;
+
+      current += char;
+      lastSide = side;
+      letter.classList.add('used');
+      selectedLetters.push(letter);
+      currentEl.textContent = current;
+    });
+  });
+
+  document.getElementById('submit').onclick = submitWord;
+  document.getElementById('backspace').onclick = backspace;
+  document.getElementById('reset').onclick = () => {
+    current = "";
+    lastSide = null;
+    usedWords = [];
+    solved = false;
+    lastPoint = null;
+    lines = [];
+    selectedLetters = [];
+    svg.innerHTML = "";
+    currentEl.textContent = "";
+    wordsEl.textContent = "";
+    messageEl.textContent = "";
+    document.querySelectorAll('.letter').forEach(l => l.classList.remove('used'));
+  };
+
+  function backspace() {
+    if (!current) return;
+
+    current = current.slice(0, -1);
+    lastSide = null;
+    currentEl.textContent = current;
+
+    if (lines.length > 0) {
+      const lastLine = lines.pop();
+      lastLine.remove();
+    }
+
+    if (selectedLetters.length > 0) {
+      const lastLetter = selectedLetters.pop();
+      lastLetter.classList.remove('used');
+    }
+
+    lastPoint = selectedLetters.length > 0 ? getLetterCenter(selectedLetters[selectedLetters.length - 1]) : null;
+  }
+
+  function getLetterCenter(letter) {
+    const rect = letter.getBoundingClientRect();
+    const boardRect = document.querySelector('.board').getBoundingClientRect();
+    return { x: rect.left + rect.width / 2 - boardRect.left, y: rect.top + rect.height / 2 - boardRect.top };
+  }
+
+  function submitWord() {
+    if (current.length < 3) return;
+
+    usedWords.push(current.toUpperCase());
+    wordsEl.textContent = usedWords.join(" → ");
+
+    checkWin();
+
+    current = current.slice(-1);
+    lastSide = null;
+    currentEl.textContent = current;
+  }
+
+  function checkWin() {
+    if (usedWords.length !== 2) return;
+
+    if (usedWords[0] === TARGET[0] && usedWords[1] === TARGET[1]) {
+      solved = true;
+      messageEl.textContent = "✨ You Solved It! ✨";
+    }
+
+    if (usedWords[0] === ALTERNATE[0] && usedWords[1] === ALTERNATE[1]) {
+      solved = true;
+      messageEl.textContent = "Great Find! Not the answer I was looking for, but you're so close!";
+    }
+  }
+</script>
+</body>
+</html>
