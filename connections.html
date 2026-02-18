@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Connections – Anniversary Puzzle</title>
+
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #fafafa;
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .game {
+    width: min(480px, 100%);
+    text-align: center;
+  }
+
+  h1 {
+    margin-bottom: 16px;
+  }
+
+  /* ================= SOLVED AREA ================= */
+  .solved-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 18px;
+    width: 100%;
+  }
+
+  .solved-container {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    animation: slideUp 0.35s ease;
+  }
+
+  .solved-label {
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    text-align: left;
+    margin-bottom: 6px;
+  }
+
+  .solved-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    grid-auto-rows: 78px;
+  }
+
+  /* ================= MAIN BOARD ================= */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    grid-auto-rows: 78px;
+    width: 100%;
+  }
+
+  /* ================= TILE ================= */
+  .tile {
+    width: 100%;
+    height: 78px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 2px solid #ccc;
+    background: #fff;
+
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1;
+    text-align: center;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .tile.selected {
+    background: #e6e6e6;
+    border-color: #111;
+  }
+
+  .tile.locked {
+    cursor: default;
+    border-color: transparent;
+  }
+
+  /* ================= CATEGORY COLORS ================= */
+  .yellow { background: #f7da21; }
+  .green  { background: #a0d995; }
+  .blue   { background: #9cc9f5; }
+  .purple { background: #c9a0dc; }
+
+  /* ================= CONTROLS ================= */
+  .controls button {
+    margin: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+  }
+
+  .message {
+    height: 24px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* ================= ATTEMPTS ================= */
+  .attempts {
+    margin-top: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .dots {
+    display: inline-flex;
+    gap: 6px;
+    margin-left: 6px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+  }
+
+  .dot.used {
+    background: #111;
+  }
+
+  /* ================= REVEAL CONTROLS ================= */
+  .reveal-controls {
+    margin-top: 10px;
+    display: none;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .reveal-controls button {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+  }
+
+  /* ================= ANIMATIONS ================= */
+  .shake { animation: shake 0.4s; }
+
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+
+<body>
+<div class="game">
+  <h1>Connections</h1>
+
+  <div id="solved" class="solved-area"></div>
+  <div id="board" class="board"></div>
+
+  <div class="controls">
+    <button id="submit">Submit</button>
+    <button id="clear">Clear</button>
+  </div>
+
+  <div class="attempts">
+    Mistakes:
+    <span class="dots" id="dots"></span>
+  </div>
+
+  <div id="revealControls" class="reveal-controls">
+    <button id="reveal">Reveal Answers</button>
+    <button id="keepPlaying">Keep Playing</button>
+  </div>
+
+  <div id="message" class="message"></div>
+</div>
+
+<script>
+const CATEGORIES = [
+  {
+    color: 'purple',
+    label: "Homophones for Gotham FC players' last names. (Lily Reale, Emily Sonnett, Ann Katrin Berger, Midge Purce)",
+    words: ['REAL','SONNET','BURGER','PURSE']
+  },
+  {
+    color: 'blue',
+    label: "First word in New Orleans places we visited. (French Market, Preservation Hall, Bourbon Street, Commander's Palace)",
+    words: ['FRENCH','PRESERVATION','BOURBON','COMMANDERS']
+  },
+  {
+    color: 'yellow',
+    label: "Our Halloween costumes.",
+    words: ['DUCK','PENGUIN','LIME','NERD']
+  },
+  {
+    color: 'green',
+    label: "Sport teams we watched lose last year.",
+    words: ['MINERS','SIRENS','GIANTS','STORM']
+  }
+];
+
+let remaining = CATEGORIES.flatMap(c => c.words);
+let selected = [];
+let solved = new Set();
+let mistakes = 0;
+const MAX_MISTAKES = 4;
+
+const board = document.getElementById('board');
+const solvedArea = document.getElementById('solved');
+const message = document.getElementById('message');
+const dotsEl = document.getElementById('dots');
+const revealControls = document.getElementById('revealControls');
+
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+function renderDots() {
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < MAX_MISTAKES; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'dot' + (i < mistakes ? ' used' : '');
+    dotsEl.appendChild(dot);
+  }
+}
+
+function renderBoard() {
+  board.innerHTML = '';
+  shuffle([...remaining]).forEach(word => {
+    const div = document.createElement('div');
+    div.className = 'tile';
+    div.textContent = word;
+    div.onclick = () => toggle(div);
+    board.appendChild(div);
+  });
+}
+
+renderDots();
+renderBoard();
+
+function toggle(tile) {
+  if (tile.classList.contains('locked')) return;
+
+  if (tile.classList.contains('selected')) {
+    tile.classList.remove('selected');
+    selected = selected.filter(t => t !== tile);
+  } else {
+    if (selected.length === 4) return;
+    tile.classList.add('selected');
+    selected.push(tile);
+  }
+}
+
+function clearSelection() {
+  selected.forEach(t => t.classList.remove('selected'));
+  selected = [];
+}
+
+function submit() {
+  if (selected.length !== 4) return;
+
+  const words = selected.map(t => t.textContent);
+
+  const match = CATEGORIES.find(c =>
+    !solved.has(c.color) &&
+    c.words.every(w => words.includes(w))
+  );
+
+  if (match) {
+    solved.add(match.color);
+    remaining = remaining.filter(w => !match.words.includes(w));
+    addSolved(match);
+    clearSelection();
+    renderBoard();
+    message.textContent = solved.size === 4 && mistakes === 0 ? 'Perfect!' : '';
+    return;
+  }
+
+  mistakes++;
+  renderDots();
+
+  const oneAway = CATEGORIES.some(c =>
+    !solved.has(c.color) &&
+    words.filter(w => c.words.includes(w)).length === 3
+  );
+
+  message.textContent = oneAway ? 'One away…' : 'Not quite…';
+  board.classList.add('shake');
+  setTimeout(() => board.classList.remove('shake'), 400);
+
+  if (mistakes >= MAX_MISTAKES) {
+    message.textContent = "You've used all attempts.";
+    revealControls.style.display = 'flex';
+  }
+
+  clearSelection();
+}
+
+function addSolved(category) {
+  const container = document.createElement('div');
+  container.className = `solved-container ${category.color}`;
+
+  const label = document.createElement('div');
+  label.className = 'solved-label';
+  label.textContent = category.label.toUpperCase();
+  container.appendChild(label);
+
+  const row = document.createElement('div');
+  row.className = 'solved-row';
+
+  category.words.forEach(word => {
+    const tile = document.createElement('div');
+    tile.className = 'tile locked';
+    tile.textContent = word;
+    row.appendChild(tile);
+  });
+
+  container.appendChild(row);
+  solvedArea.appendChild(container);
+}
+
+function revealAll() {
+  CATEGORIES.forEach(cat => {
+    if (!solved.has(cat.color)) {
+      solved.add(cat.color);
+      remaining = remaining.filter(w => !cat.words.includes(w));
+      addSolved(cat);
+    }
+  });
+  renderBoard();
+  message.textContent = 'All answers revealed.';
+  revealControls.style.display = 'none';
+}
+
+document.getElementById('submit').onclick = submit;
+document.getElementById('clear').onclick = clearSelection;
+document.getElementById('reveal').onclick = revealAll;
+document.getElementById('keepPlaying').onclick = () => {
+  revealControls.style.display = 'none';
+  message.textContent = '';
+};
+</script>
+</body>
+</html>
